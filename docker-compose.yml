@@ -1,0 +1,118 @@
+# development environment
+version: '2'
+
+services:
+
+  nginx:
+    depends_on:
+      - php-fpm
+    image: nginx:latest
+    container_name: ${PROJECT_NAME}-nginx
+    networks:
+      - magento_development
+    volumes:
+      - ./magento2:/home/magento:cached
+      - ./docker/development/conf.d:/etc/nginx/conf.d
+      - ./data/development/log/nginx:/var/log/nginx
+    ports:
+      - "80:80"
+
+  php-fpm:
+    platform: linux/x86_64
+    build: ./php-fpm
+    container_name: ${PROJECT_NAME}-php-fpm
+    volumes:
+      - ./magento2:/home/magento:cached
+      - ./docker/development/php.ini:/etc/php.ini
+      - ./docker/development/auth.json:/root/.composer/auth.json
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+      - elasticsearch
+    networks:
+      - magento_development
+    environment:
+      PHP_IDE_CONFIG: "serverName=Docker"
+
+  redis:
+    image: redis:6.2
+    container_name: ${PROJECT_NAME}-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - magento_development
+
+  mysql:
+    platform: linux/x86_64
+    image: mysql:8.0.27
+    container_name: ${PROJECT_NAME}-mysql
+    volumes:
+      - ./docker/development/config/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+      - ./data/development/db/mysql:/var/lib/mysql
+    env_file: ./docker/development/envs/db.env
+    ports:
+      - "3308:3306"
+    networks:
+      - magento_development
+
+  mailhog:
+    platform: linux/x86_64
+    image: mailhog/mailhog
+    container_name: ${PROJECT_NAME}-mailhog
+    environment:
+      - VIRTUAL_HOST=mail.${PROJECT_VIRTUAL_HOST}
+      - VIRTUAL_PORT=8025
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - magento_development
+    expose:
+      - 8025
+
+  rabbitmq:
+    image: rabbitmq:3.9-management
+    container_name: ${PROJECT_NAME}-rabbitmq
+    environment:
+      - VIRTUAL_HOST=rabbit.${PROJECT_VIRTUAL_HOST}
+      - VIRTUAL_PORT=15672
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    restart: always
+    networks:
+      - magento_development
+    expose:
+      - 15672
+
+  elasticsearch:
+    image: elasticsearch:7.16.3
+    container_name: ${PROJECT_NAME}-elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    restart: always
+    networks:
+      - magento_development
+    environment:
+      - "discovery.type=single-node"
+      ## Set custom heap size to avoid memory errors
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - VIRTUAL_HOST=elastic.${PROJECT_VIRTUAL_HOST}
+      - VIRTUAL_PORT=9200
+    expose:
+      - 9200
+  phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      container_name: ${PROJECT_NAME}-phpmyadmin
+      networks:
+      - magento_development
+      restart: unless-stopped
+      env_file: ./docker/development/envs/phpmyadmin.env
+      ports:
+        - "8080:80"
+
+networks:
+  magento_development:
+    driver: bridge

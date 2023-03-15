@@ -1,0 +1,107 @@
+# production environment
+version: '2'
+
+services:
+
+  nginx:
+    depends_on:
+      - php-fpm
+    image: nginx:latest
+    restart: unless-stopped
+    container_name: ${PROJECT_NAME}-nginx
+    networks:
+      - magento
+    volumes:
+      - ./magento2:/home/magento:cached
+      - ./docker/production/conf.d:/etc/nginx/conf.d
+      - ./data/production/log/nginx:/var/log/nginx
+      - ./docker/production/certificates:/etc/nginx/production-certificates
+      - ./data/production/certbot/conf:/etc/letsencrypt
+      - ./data/production/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+
+  php-fpm:
+    platform: linux/x86_64
+    build: ./php-fpm
+    container_name: ${PROJECT_NAME}-php-fpm
+    volumes:
+      - ./magento2:/home/magento:cached
+      - ./docker/production/config/php.ini:/etc/php.ini
+      - ./docker/production/auth.json:/root/.composer/auth.json
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+      - elasticsearch
+    networks:
+      - magento
+    environment:
+      PHP_IDE_CONFIG: "serverName=Docker"
+
+  redis:
+    image: redis:6.2
+    container_name: ${PROJECT_NAME}-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - magento
+
+  mysql:
+    platform: linux/x86_64
+    image: mysql:8.0.27
+    container_name: ${PROJECT_NAME}-mysql
+    volumes:
+      - ./docker/production/config/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+      - ./data/production/db/mysql:/var/lib/mysql
+    env_file: ./docker/production/envs/db.env
+    ports:
+      - "3308:3306"
+    networks:
+      - magento
+
+  rabbitmq:
+    image: rabbitmq:3.9-management
+    container_name: ${PROJECT_NAME}-rabbitmq
+    environment:
+      - VIRTUAL_HOST=rabbit.${PROJECT_VIRTUAL_HOST}
+      - VIRTUAL_PORT=15672
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    restart: always
+    networks:
+      - magento
+    expose:
+      - 15672
+
+  elasticsearch:
+    image: elasticsearch:7.16.3
+    container_name: ${PROJECT_NAME}-elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    restart: always
+    networks:
+      - magento
+    environment:
+      - "discovery.type=single-node"
+      ## Set custom heap size to avoid memory errors
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - VIRTUAL_HOST=elastic.${PROJECT_VIRTUAL_HOST}
+      - VIRTUAL_PORT=9200
+    expose:
+      - 9200
+
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./data/production/certbot/conf:/etc/letsencrypt
+      - ./data/production/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+networks:
+  magento:
+    driver: bridge

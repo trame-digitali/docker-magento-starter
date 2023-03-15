@@ -1,0 +1,9 @@
+certbot/*
+!certbot
+db/mysql/*
+!db/mysql
+log/*
+!log
+!log/nginx
+
+!.gitkeep

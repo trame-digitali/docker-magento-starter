@@ -1,0 +1,14 @@
+# Ignore Mac DS_Store files
+.DS_Store
+# Ignore PHPStorm folder
+.idea
+# Ignore Magento files
+magento2/pub/*
+!magento2/pub
+magento2/var/*
+!magento2/var
+magento2/generated/*
+!magento2/generated
+
+# Ignore Magento files
+.docker-sync
