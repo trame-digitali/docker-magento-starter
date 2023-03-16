@@ -4,6 +4,7 @@ db/mysql/*
 !db/mysql
 log/*
 !log
+log/nginx/*
 !log/nginx
 
 !.gitkeep
