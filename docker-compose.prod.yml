@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
     container_name: ${PROJECT_NAME}-nginx
     networks:
-      - magento
+      - magento_production
     volumes:
       - ./magento2:/home/magento:cached
       - ./docker/production/conf.d:/etc/nginx/conf.d
@@ -36,7 +36,7 @@ services:
       - rabbitmq
       - elasticsearch
     networks:
-      - magento
+      - magento_production
     environment:
       PHP_IDE_CONFIG: "serverName=Docker"
 
@@ -46,7 +46,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - magento
+      - magento_production
 
   mysql:
     platform: linux/x86_64
@@ -59,7 +59,7 @@ services:
     ports:
       - "3308:3306"
     networks:
-      - magento
+      - magento_production
 
   rabbitmq:
     image: rabbitmq:3.9-management
@@ -72,7 +72,7 @@ services:
       - "5672:5672"
     restart: always
     networks:
-      - magento
+      - magento_production
     expose:
       - 15672
 
@@ -84,7 +84,7 @@ services:
       - "9300:9300"
     restart: always
     networks:
-      - magento
+      - magento_production
     environment:
       - "discovery.type=single-node"
       ## Set custom heap size to avoid memory errors
@@ -103,5 +103,5 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 networks:
-  magento:
+  magento_production:
     driver: bridge

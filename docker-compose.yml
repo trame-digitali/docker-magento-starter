@@ -7,7 +7,7 @@ services:
     depends_on:
       - php-fpm
     image: nginx:latest
-    container_name: ${PROJECT_NAME}-nginx
+    container_name: ${PROJECT_NAME}-dev-nginx
     networks:
       - magento_development
     volumes:
@@ -20,7 +20,7 @@ services:
   php-fpm:
     platform: linux/x86_64
     build: ./php-fpm
-    container_name: ${PROJECT_NAME}-php-fpm
+    container_name: ${PROJECT_NAME}-dev-php-fpm
     volumes:
       - ./magento2:/home/magento:cached
       - ./docker/development/php.ini:/etc/php.ini
@@ -37,7 +37,7 @@ services:
 
   redis:
     image: redis:6.2
-    container_name: ${PROJECT_NAME}-redis
+    container_name: ${PROJECT_NAME}-dev-redis
     ports:
       - "6379:6379"
     networks:
@@ -46,7 +46,7 @@ services:
   mysql:
     platform: linux/x86_64
     image: mysql:8.0.27
-    container_name: ${PROJECT_NAME}-mysql
+    container_name: ${PROJECT_NAME}-dev-mysql
     volumes:
       - ./docker/development/config/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
       - ./data/development/db/mysql:/var/lib/mysql
@@ -59,7 +59,7 @@ services:
   mailhog:
     platform: linux/x86_64
     image: mailhog/mailhog
-    container_name: ${PROJECT_NAME}-mailhog
+    container_name: ${PROJECT_NAME}-dev-mailhog
     environment:
       - VIRTUAL_HOST=mail.${PROJECT_VIRTUAL_HOST}
       - VIRTUAL_PORT=8025
@@ -73,7 +73,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.9-management
-    container_name: ${PROJECT_NAME}-rabbitmq
+    container_name: ${PROJECT_NAME}-dev-rabbitmq
     environment:
       - VIRTUAL_HOST=rabbit.${PROJECT_VIRTUAL_HOST}
       - VIRTUAL_PORT=15672
@@ -88,7 +88,7 @@ services:
 
   elasticsearch:
     image: elasticsearch:7.16.3
-    container_name: ${PROJECT_NAME}-elasticsearch
+    container_name: ${PROJECT_NAME}-dev-elasticsearch
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -105,7 +105,7 @@ services:
       - 9200
   phpmyadmin:
       image: phpmyadmin/phpmyadmin
-      container_name: ${PROJECT_NAME}-phpmyadmin
+      container_name: ${PROJECT_NAME}-dev-phpmyadmin
       networks:
       - magento_development
       restart: unless-stopped
