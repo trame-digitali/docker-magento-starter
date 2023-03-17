@@ -28,7 +28,7 @@ services:
     container_name: ${PROJECT_NAME}-php-fpm
     volumes:
       - ./magento2:/home/magento:cached
-      - ./docker/production/config/php.ini:/etc/php.ini
+      - ./docker/production/php-fpm/php.ini:/etc/php.ini
       - ./docker/production/auth.json:/root/.composer/auth.json
     depends_on:
       - mysql

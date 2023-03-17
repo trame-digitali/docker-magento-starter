@@ -19,11 +19,11 @@ services:
 
   php-fpm:
     platform: linux/x86_64
-    build: ./php-fpm
+    build: ./docker/php-fpm
     container_name: ${PROJECT_NAME}-dev-php-fpm
     volumes:
       - ./magento2:/home/magento:cached
-      - ./docker/development/php.ini:/etc/php.ini
+      - ./docker/development/php-fpm/php.ini:/etc/php.ini
       - ./docker/development/auth.json:/root/.composer/auth.json
     depends_on:
       - mysql
